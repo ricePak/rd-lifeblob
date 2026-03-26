@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RD LifeBlob</title>
+<link rel="stylesheet" href="assets/css/styles.css">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+<div id="canvas-container"></div>
+
+<div class="top-bar">
+  <h1>RD LifeBlob</h1>
+  <div class="sep"></div>
+  <div>By Steven Qi / COGS 300 - Design Challenge 5</div>
+</div>
+<div class="panels">
+  <div class="panel">
+    <div class="panel-section">
+      <label class="stat">Simulation: Gen <span id="gen-count">0</span> / Alive <span id="alive-count">0</span></label>
+      <div class="btn-row">
+        <button class="btn accent" id="btn-play">▶ Play</button>
+        <button class="btn" id="btn-step" disabled>&gt;| Step</button>
+        <button class="btn danger" id="btn-clear">Reset</button>
+      </div>
+    </div>
+
+    <div class="panel-section hidden" id="speed">
+      <label>Speed</label>
+      <div class="slider-row">
+        <input type="range" id="speed-slider" min="1" max="10" value="5">
+        <div class="val" id="speed-val">5 it/s</div>
+      </div>
+    </div>
+    <div class="panel-section" id="count">
+      <label>Initial cells</label>
+      <div class="slider-row">
+        <input type="range" id="count-slider" min="1" max="10" value="1">
+        <div class="val" id="count-val">1</div>
+      </div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-section">
+      <label>Transition Rules</label>
+      <div class="rule-graph-shell">
+        <svg
+          class="rule-graph"
+          id="rule-graph"
+          viewBox="0 0 420 132"
+          role="img"
+          aria-label="Transition rule graph with neighbor counts on the x axis and state values from minus one to one on the y axis"
+        ></svg>
+      </div>
+      <div class="rule-grid" id="birth-rules"></div>
+      <div class="rule-grid" id="survival-rules"></div>
+    </div>
+
+    <div class="panel-section">
+      <label>Presets</label>
+      <div class="presets-row" id="presets-row"></div>
+    </div>
+  </div>
+  <div class="panel scroll">
+    <h1>Graphics Settings</h1>
+    <div class="scroll-area">
+      <h2>Appearance</h2>
+      <div class="panel-section hidden">
+        <label>Cross-section (Y slice)</label>
+        <div class="slider-row">
+          <input type="range" id="slice-slider" min="-1" max="6" value="-1">
+          <div class="val" id="slice-val">All</div>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <label>Nucleus opacity</label>
+        <div class="slider-row">
+          <input type="range" id="opacity-slider" min="10" max="100" value="80">
+          <div class="val" id="opacity-val">80%</div>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <label>Blob affinity</label>
+        <div class="slider-row">
+          <input type="range" id="blob-radius-slider" min="0" max="100" value="90">
+          <div class="val" id="blob-radius-val">90%</div>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <label class="toggle-row" for="btn-boundaries">
+          <span>Render cell boundaries </span>
+          <input type="checkbox" id="btn-boundaries" checked>
+        </label>
+        <div class="slider-row">
+          <span class="slider-caption">Alive</span>
+          <input type="range" id="boundary-alive-slider" min="0" max="100" value="20">
+          <div class="val" id="boundary-alive-val">20%</div>
+        </div>
+        <div class="slider-row">
+          <span class="slider-caption">Adjacent</span>
+          <input type="range" id="boundary-adj-slider" min="0" max="100" value="5">
+          <div class="val" id="boundary-adj-val">5%</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <h2>Rendering</h2>
+
+      <div class="panel-section">
+        <label>Mesh resolution</label>
+        <div class="slider-row">
+          <input type="range" id="grid-res-slider" min="16" max="96" value="64">
+          <div class="val" id="grid-res-val">64</div>
+        </div>
+      </div>
+      <div class="panel-section">
+        <label class="toggle-row" for="btn-smooth-shading">
+          <span>Enable smooth shading </span>
+          <input type="checkbox" id="btn-smooth-shading" checked>
+        </label>
+      </div>
+    </div>
+    
+  </div>
+</div>
+
+<div class="bottom-bar">
+  <div class="help-text left">
+    Rhombic Dodecahedron LifeBlob V1.0 <br>
+    Grid Size: <span id="grid-size">-- FCC</span> FPS: <span id="fps-count">0</span> Neigh: 12
+  </div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot legend-dot-alive"></div> Alive</div>
+    <div class="legend-item"><div class="legend-dot legend-dot-born"></div> Born</div>
+    <div class="legend-item"><div class="legend-dot legend-dot-dying"></div> Dying</div>
+  </div>
+
+  <div class="help-text right">
+    [LMB] Drag to orbit <br> Scroll to zoom<br>
+    Adjust Transition Rules to explore emergent behaviour<br>
+    Adjust Graphics Settings if framerate is low
+  </div>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="assets/js/constants/colors.js"></script>
+<script src="assets/js/constants/lattice.js"></script>
+<script src="assets/js/constants/scene.js"></script>
+<script src="assets/js/constants/simulation.js"></script>
+<script src="assets/js/constants/render.js"></script>
+<script src="assets/js/constants/marching-cubes.js"></script>
+<script src="assets/js/lattice.js"></script>
+<script src="assets/js/scene.js"></script>
+<script src="assets/js/render.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/main.js"></script>
+</body>
+</html>
